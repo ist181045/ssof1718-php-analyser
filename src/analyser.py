@@ -2,7 +2,6 @@ import json
 import sys
 from pattern import Pattern
 
-
 def analysis(fileName):
     patterns = getPatterns("patterns")
 
@@ -28,9 +27,23 @@ def analysis(fileName):
                     if right["kind"] == "bin":
                         visitBin(element,tainted)
 
+                if element["kind"] == "echo" or element["kind"] == "print":
+                    arguments = element["arguments"]
+                    for argument in arguments:
+                        if argument["kind"] == "offsetlookup":
+                            visitOffsetlookup(argument, pattern, tainted)
+                            # if element["kind"] == "call":
 
 
-def visitOffsetlookup(element, pattern, tainted):
+def visitOffsetlookup(argument, pattern, tainted):
+    if "what" in argument:
+        what = argument["what"]
+        for entry in pattern.entries:
+            if what["name"] == entry.strip("$"):
+                print("slice is vulnerable")
+
+
+def visitAssignOffsetlookup(element, pattern, tainted):
     right = element["right"]
     if "what" in right:
         what = right["what"]
@@ -101,14 +114,14 @@ def getPatterns(fileName):
     file = open(fileName, 'r')
     patterns = []
     while True:
-        type = file.readline()
+        type = file.readline().strip("\n")
         if type == "":
             break
-        fileEntries = file.readline()
+        fileEntries = file.readline().strip("\n")
         entries = fileEntries.split(",")
-        fileSanitizations = file.readline()
+        fileSanitizations = file.readline().strip("\n")
         sanitizations = fileSanitizations.split(",")
-        fileSensitiveSinks = file.readline()
+        fileSensitiveSinks = file.readline().strip("\n")
         sensitiveSinks = fileSensitiveSinks.split(",")
         file.readline()
         patterns.append(Pattern(type, entries, sanitizations, sensitiveSinks))
