@@ -1,6 +1,6 @@
 class Pattern:
-    def __init__(self, type, entries, sanitizations, sensitiveSinks):
-        self.type = type
+    def __init__(self, vuln_type, entries, sanitizers, sinks):
+        self.type = vuln_type
         self.entries = entries
-        self.sanitizations = sanitizations
-        self.sensitiveSinks = sensitiveSinks
+        self.sanitizers = sanitizers
+        self.sinks = sinks

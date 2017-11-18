@@ -71,13 +71,13 @@ def visit_assign_call(element, pattern, tainted):
     if 'what' in right:
         what = right['what']
         if what['kind'] == 'identifier':
-            for sensitiveSink in pattern.sensitiveSinks:
-                if what['name'] == sensitiveSink:
+            for sink in pattern.sinks:
+                if what['name'] == sink:
                     for argument in right['arguments']:
                         if argument['name'] in tainted:
                             print('slice is vulnerable')
-            for sanitization in pattern.sanitizations:
-                if what['name'] == sanitization:
+            for sanitizer in pattern.sanitizers:
+                if what['name'] == sanitizer:
                     for argument in right['arguments']:
                         if argument['name'] in tainted:
                             tainted.remove(argument['name'])
@@ -87,8 +87,8 @@ def visit_assign_call(element, pattern, tainted):
 def visit_call(element, pattern, tainted):
     if 'what' in element:
         what = element['what']
-        for sensitiveSink in pattern.sensitiveSinks:
-            if what['name'] == sensitiveSink:
+        for sink in pattern.sinks:
+            if what['name'] == sink:
                 for argument in element['arguments']:
                     if 'name' in argument:
                         if argument['name'] in tainted:
@@ -144,10 +144,10 @@ def get_patterns(file_name):
         if vuln_type == "":
             break
         entries = file.readline().strip("\n").split(",")
-        sanitizations = file.readline().strip("\n").split(",")
-        sensitiveSinks = file.readline().split(",")
+        sanitizers = file.readline().strip("\n").split(",")
+        sinks = file.readline().split(",")
         file.readline()
-        patterns.append(Pattern(vuln_type, entries, sanitizations, sensitiveSinks))
+        patterns.append(Pattern(vuln_type, entries, sanitizers, sinks))
 
     return patterns
 
