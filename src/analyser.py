@@ -11,15 +11,16 @@ def analysis(fileName):
 
     for pattern in patterns:
         tainted = []
+        untainted = []
         if data["kind"] == "program":
             for element in data["children"]:
                 if element["kind"] == "assign":
                     right = element["right"]
                     if right["kind"] == "offsetlookup":
-                        visitOffsetlookup(element, pattern, tainted)
+                        visitAssignOffsetlookup(element, pattern, tainted)
 
                     if right["kind"] == "call":
-                        visitCall(element, pattern, tainted)
+                        visitAssignCall(element, pattern, tainted)
 
                     if right["kind"] == "encapsed":
                         visitEncapsed(element, tainted)
@@ -27,13 +28,18 @@ def analysis(fileName):
                     if right["kind"] == "bin":
                         visitBin(element,tainted)
 
-                if element["kind"] == "echo" or element["kind"] == "print":
+                if element["kind"] in pattern.sensitiveSinks:
                     arguments = element["arguments"]
                     for argument in arguments:
                         if argument["kind"] == "offsetlookup":
                             visitOffsetlookup(argument, pattern, tainted)
                             # if element["kind"] == "call":
 
+                if element["kind"] == "call":
+                    visitCall(element, pattern, tainted)
+
+                #if element["kind"] == "while":
+                #    visitWhile(element, pattern, tainted)
 
 def visitOffsetlookup(argument, pattern, tainted):
     if "what" in argument:
@@ -55,24 +61,32 @@ def visitAssignOffsetlookup(element, pattern, tainted):
                         tainted.append(taint)
 
 
-def visitCall(element, pattern, tainted):
+def visitAssignCall(element, pattern, tainted):
     right = element["right"]
     if "what" in right:
         what = right["what"]
         if what["kind"] == "identifier":
-            what = right["what"]
-            if what["kind"] == "identifier":
-                for sensitiveSink in pattern.sensitiveSinks:
-                    if what["name"] == sensitiveSink:
-                        for argument in right["arguments"]:
-                            if argument["name"] in tainted:
-                                print("slice is vulnerable")
-                for sanitization in pattern.sanitizations:
-                    if what["name"] == sanitization:
-                        for argument in right["arguments"]:
-                            if argument["name"] in tainted:
-                                tainted.remove(argument["name"])
+            for sensitiveSink in pattern.sensitiveSinks:
+                if what["name"] == sensitiveSink:
+                    for argument in right["arguments"]:
+                        if argument["name"] in tainted:
+                            print("slice is vulnerable")
+            for sanitization in pattern.sanitizations:
+                if what["name"] == sanitization:
+                    for argument in right["arguments"]:
+                        if argument["name"] in tainted:
+                            tainted.remove(argument["name"])
     return ""
+
+def visitCall(element, pattern, tainted):
+    if "what" in element:
+        what = element["what"]
+        for sensitiveSink in pattern.sensitiveSinks:
+            if what["name"] == sensitiveSink:
+                for argument in element["arguments"]:
+                    if "name" in argument:
+                        if argument["name"] in tainted:
+                            print("slice is vulnerable")
 
 
 def visitEncapsed(element, tainted):
@@ -100,13 +114,18 @@ def visitBin(element, tainted):
         visitBinRec(right, tainted, topVar)
 
 
-def visitBinRec(right, tainted, topVar):
-    right = right["left"]["right"]
-    if right["kind"] == "variable":
-        if right["name"] in tainted:
+def visitBinRec(element, tainted, topVar):
+    if element["kind"] == "variable":
+        if element["name"] in tainted:
             if topVar != "" and not topVar in tainted:
                 tainted.append(topVar)
-    if "left" in right:
+
+    if "left" in element:
+        left = element["left"]
+        visitBinRec(left, tainted, topVar)
+
+    if "right" in element:
+        right = element["right"]
         visitBinRec(right, tainted, topVar)
 
 
