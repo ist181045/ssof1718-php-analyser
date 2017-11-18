@@ -136,18 +136,18 @@ def visit_bin_rec(element, tainted, top_var):
 
 
 def get_patterns(file_name):
-    file = open(file_name, 'r')
     patterns = []
-
-    while True:
-        vuln_type = file.readline().strip("\n")
-        if vuln_type == "":
-            break
-        entries = file.readline().strip("\n").split(",")
-        sanitizers = file.readline().strip("\n").split(",")
-        sinks = file.readline().split(",")
-        file.readline()
-        patterns.append(Pattern(vuln_type, entries, sanitizers, sinks))
+    with open(file_name, 'r') as file:
+        for line in file:
+            if line == '\n':
+                pass
+            else:
+                patterns.append(Pattern(
+                    vuln_type=line.strip('\n'),
+                    entries=file.readline().strip('\n').split(','),
+                    sanitizers=file.readline().strip('\n').split(','),
+                    sinks=file.readline().strip('\n').split(',')
+                ))
 
     return patterns
 
