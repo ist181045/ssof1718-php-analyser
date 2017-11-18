@@ -67,8 +67,8 @@ def visit_assign_offsetlookup(element: dict, pattern: Pattern,
                         tainted.append(taint)
 
 
-def visit_assign_call(element: dict, pattern: Pattern, tainted: list) \
-        -> Union[str, None]:
+def visit_assign_call(element: dict, pattern: Pattern,
+                      tainted: list) -> Union[str, None]:
     right = element['right']
     if 'what' in right:
         what = right['what']
