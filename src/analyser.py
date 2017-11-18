@@ -18,40 +18,66 @@ def analysis(file: str) -> None:
 
         if ast['kind'] == 'program':
             for element in ast['children']:
-                if element['kind'] == 'assign':
-                    right = element['right']
-                    if right['kind'] == 'offsetlookup':
-                        visit_assign_offsetlookup(element, pattern, tainted)
+                visit_element(element, pattern, tainted)
 
-                    if right['kind'] == 'call':
-                        visit_assign_call(element, pattern, tainted)
 
-                    if right['kind'] == 'encapsed':
-                        visit_encapsed(element, tainted)
+def visit_element(element: dict, pattern: Pattern, tainted: list) -> None:
+    if element["kind"] == "assign":
+        right = element["right"]
+        if right["kind"] == "offsetlookup":
+            visit_assign_offsetlookup(element, pattern, tainted)
 
-                    if right['kind'] == 'bin':
-                        visit_bin(element, tainted)
+        if right["kind"] == "call":
+            visit_assign_call(element, pattern, tainted)
 
-                if element['kind'] in pattern.sinks:
-                    arguments = element['arguments']
-                    for argument in arguments:
-                        if argument['kind'] == 'offsetlookup':
-                            visit_offsetlookup(argument, pattern, tainted)
-                            # if element["kind"] == "call":
+        if right["kind"] == "encapsed":
+            visit_encapsed(element, tainted)
 
-                if element['kind'] == 'call':
-                    visit_call(element, pattern, tainted)
+        if right["kind"] == "bin":
+            visit_bin(element, tainted)
 
-                    # if element["kind"] == "while":
-                    #    visitWhile(element, pattern, tainted)
+        left = element["left"]
+        if left["kind"] == "variable":
+            if right["kind"] == "variable":
+                if right["name"] in tainted:
+                    if left["name"] not in tainted:
+                        tainted.append(left["name"])
 
+
+    if element["kind"] in pattern.sinks:
+        arguments = element["arguments"]
+        for argument in arguments:
+            if argument["kind"] == "offsetlookup":
+                visit_offsetlookup(argument, pattern, tainted)
+
+    if element["kind"] == "call":
+        visit_call(element, pattern, tainted)
+
+    if element["kind"] == "while":
+        visit_while(element, pattern, tainted)
+
+
+def visit_while(element: dict, pattern: Pattern, tainted: list) -> None:
+    test = element["test"]
+    topVar = ""
+    if test["kind"] == "bin":
+        topVar = test["left"]["name"]
+        topChange = False
+    body = element["body"]
+    for children in body["children"]:
+        if "left" in children:
+            if children["left"]["name"] == topVar:
+                topChange = True
+    for children in body["children"]:
+        if topChange == True:
+            visit_element(children, pattern, tainted)
 
 def visit_offsetlookup(argument: dict, pattern: Pattern, tainted: list) -> None:
     if 'what' in argument:
         what = argument['what']
         for entry in pattern.entries:
             if what['name'] == entry.strip('$'):
-                print('slice is vulnerable')
+                print('slice is vulnerable to ' + pattern.type)
 
 
 def visit_assign_offsetlookup(element: dict, pattern: Pattern,
@@ -77,7 +103,7 @@ def visit_assign_call(element: dict, pattern: Pattern,
                 if what['name'] == sink:
                     for argument in right['arguments']:
                         if argument['name'] in tainted:
-                            print('slice is vulnerable')
+                            print('slice is vulnerable to ' + pattern.type)
             for sanitizer in pattern.sanitizers:
                 if what['name'] == sanitizer:
                     for argument in right['arguments']:
@@ -94,7 +120,7 @@ def visit_call(element: dict, pattern: Pattern, tainted: list) -> None:
                 for argument in element['arguments']:
                     if 'name' in argument:
                         if argument['name'] in tainted:
-                            print('slice is vulnerable')
+                            print('slice is vulnerable to ' + pattern.type)
 
 
 def visit_encapsed(element: dict, tainted: list) -> None:
