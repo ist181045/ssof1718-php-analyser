@@ -9,14 +9,13 @@ from typing import List, Union
 
 def analysis(file: str) -> None:
     patterns = get_patterns("patterns")
-    ast = None
 
     with open(file, 'r') as json_slice:
         ast = json.load(json_slice)
 
     for pattern in patterns:
         tainted = []
-        untainted = []
+
         if ast['kind'] == 'program':
             for element in ast['children']:
                 if element['kind'] == 'assign':
