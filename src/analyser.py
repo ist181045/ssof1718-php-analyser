@@ -2,13 +2,15 @@
 
 import json
 import sys
+from os.path import dirname, realpath
 from typing import List, Union
 
 from pattern import Pattern
 
 
 def analysis(file: str) -> None:
-    patterns = get_patterns('patterns')
+    patterns = get_patterns(
+        '{base}/patterns'.format(base=dirname(realpath(__file__))))
 
     with open(file, 'r') as json_slice:
         ast = json.load(json_slice)
