@@ -1,19 +1,23 @@
+#!/usr/bin/env python3.6
+
 import json
 import sys
+
 from pattern import Pattern
 
-def analysis(fileName):
+
+def analysis(file):
     patterns = getPatterns("patterns")
+    ast = None
 
-    file = open(fileName, 'r')
-
-    data = json.load(file)
+    with open(file, 'r') as slice:
+        ast = json.load(slice)
 
     for pattern in patterns:
         tainted = []
         untainted = []
-        if data["kind"] == "program":
-            for element in data["children"]:
+        if ast["kind"] == "program":
+            for element in ast["children"]:
                 if element["kind"] == "assign":
                     right = element["right"]
                     if right["kind"] == "offsetlookup":
@@ -148,4 +152,7 @@ def getPatterns(fileName):
 
 
 if __name__ == '__main__':
+    if sys.version_info < (3, 6):
+        raise ValueError('python >= 3.6 required')
+
     analysis(sys.argv[1])
