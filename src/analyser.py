@@ -17,137 +17,148 @@ def analysis(file: str) -> None:
 
     for pattern in patterns:
         tainted = []
-        vars = {}
+        variables = {}
 
         if ast['kind'] == 'program':
             for element in ast['children']:
-                visit_element(element, pattern, tainted, vars)
+                visit_element(element, pattern, tainted, variables)
 
 
 def visit_element(element: dict, pattern: Pattern, tainted: list,
-                  vars: dict) -> None:
+                  variables: dict) -> None:
     if element['kind'] == 'assign':
         left = element['left']
         right = element['right']
+
         if right['kind'] == 'offsetlookup':
-            vars[left['name']] = visit_assign_offsetlookup(element, pattern,
-                                                           tainted)
+            variables[left['name']] = \
+                visit_assign_offsetlookup(element, pattern, tainted)
 
         if right['kind'] == 'call':
-            visit_assign_call(element, pattern, tainted, vars)
+            visit_assign_call(element, pattern, tainted, variables)
 
         if right['kind'] == 'encapsed':
-            vars[left['name']] = visit_encapsed(element, tainted, vars)
+            variables[left['name']] = visit_encapsed(element, tainted,
+                                                     variables)
 
         if right['kind'] == 'bin':
-            vars[left['name']] = visit_bin(element, tainted, vars)
+            variables[left['name']] = visit_bin(element, tainted, variables)
 
         if left['kind'] == 'variable':
             if right['kind'] == 'variable':
                 if right['name'] in tainted:
                     if left['name'] not in tainted:
                         tainted.append(left['name'])
-                if right['name'] in vars:
-                    vars[left['name']] = vars[right['name']]
+                if right['name'] in variables:
+                    variables[left['name']] = variables[right['name']]
 
             if right['kind'] == 'string':
-                vars[left['name']] = right['value']
+                variables[left['name']] = right['value']
 
     if element['kind'] in pattern.sinks:
         arguments = element['arguments']
         for argument in arguments:
             if argument['kind'] == 'offsetlookup':
-                visit_offsetlookup(argument, pattern, tainted)
+                visit_offsetlookup(argument, pattern)
 
     if element['kind'] == 'call':
         visit_call(element, pattern, tainted)
 
     if element['kind'] == 'if':
-        visit_if(element, pattern, tainted, vars)
+        visit_if(element, pattern, tainted, variables)
 
     if element['kind'] == 'while':
-        visit_while(element, pattern, tainted, vars)
+        visit_while(element, pattern, tainted, variables)
 
 
 def visit_if(element: dict, pattern: Pattern, tainted: list,
-             vars: dict) -> None:
+             variables: dict) -> None:
     body = element['body']
     for child in body['children']:
-        visit_element(child, pattern, tainted, vars)
+        visit_element(child, pattern, tainted, variables)
 
     alternate = element['alternate']
     if alternate is not None:
         if alternate['kind'] == 'if':
-            visit_if(alternate, pattern, tainted, vars)
+            visit_if(alternate, pattern, tainted, variables)
         else:
             for child in alternate['children']:
-                visit_element(child, pattern, tainted, vars)
+                visit_element(child, pattern, tainted, variables)
 
 
 def visit_while(element: dict, pattern: Pattern, tainted: list,
-                vars: dict) -> None:
+                variables: dict) -> None:
+    top_var = None
+    test_type = None
+    test_right = None
+    top_change = None
+
     test = element['test']
-    topVar = ''
-    testRight = ''
     if test['kind'] == 'bin':
-        topVar = test['left']['name']
-        testType = test['type']
-        testRight = test['right']['value']
-        topChange = False
+        top_var = test['left']['name']
+        test_type = test['type']
+        test_right = test['right']['value']
+        top_change = False
+
     body = element['body']
     for children in body['children']:
         if 'left' in children:
-            if children['left']['name'] == topVar:
-                topChange = True
+            if children['left']['name'] == top_var:
+                top_change = True
 
-    if topChange == True and topVar in vars:
-        if testType == '!=':
-            visit_while_diff_test(body, pattern, tainted, vars, topVar,
-                                  testRight)
-        elif testType == '==':
-            visit_while_equal_test(body, pattern, tainted, vars, topVar,
-                                   testRight)
+    if top_change and top_var in variables:
+        if test_type == '!=':
+            visit_while_diff_test(body, pattern, tainted, variables, top_var,
+                                  test_right)
+        elif test_type == '==':
+            visit_while_equal_test(body, pattern, tainted, variables, top_var,
+                                   test_right)
 
-    elif topChange == True and topVar not in vars:
-        vars[topVar] = ""
-        if testType == '!=':
-            visit_while_diff_test(body, pattern, tainted, vars, topVar,
-                                  testRight)
-        elif testType == '==':
-            visit_while_equal_test(body, pattern, tainted, vars, topVar,
-                                   testRight)
-        vars[topVar] = "notEmpty"
-        if testType == '!=':
-            visit_while_diff_test(body, pattern, tainted, vars, topVar,
-                                  testRight)
-        elif testType == '==':
-            visit_while_equal_test(body, pattern, tainted, vars, topVar,
-                                   testRight)
+    elif top_change and top_var not in variables:
+        variables[top_var] = ""
+        if test_type == '!=':
+            visit_while_diff_test(body, pattern, tainted, variables, top_var,
+                                  test_right)
+        elif test_type == '==':
+            visit_while_equal_test(body, pattern, tainted, variables, top_var,
+                                   test_right)
+        variables[top_var] = "notEmpty"
+        if test_type == '!=':
+            visit_while_diff_test(body, pattern, tainted, variables, top_var,
+                                  test_right)
+        elif test_type == '==':
+            visit_while_equal_test(body, pattern, tainted, variables, top_var,
+                                   test_right)
 
 
 def visit_while_diff_test(body: dict, pattern: Pattern, tainted: list,
-                          vars: dict, topVar: str, testRight) -> None:
-    while vars[topVar] != testRight:
-        inicial = vars[topVar]
+                          variables: dict, top_var: str, test_right) -> None:
+    while variables[top_var] != test_right:
+        initial = variables[top_var]
+
         for children in body['children']:
-            visit_element(children, pattern, tainted, vars)
-        if inicial == vars[topVar]:
+            visit_element(children, pattern, tainted, variables)
+
+        if initial == variables[top_var]:
             break
 
 
 def visit_while_equal_test(body: dict, pattern: Pattern, tainted: list,
-                           vars: dict, topVar: str, testRight) -> None:
-    while vars[topVar] == testRight:
-        inicial = vars[topVar]
+                           variables: dict, top_var: str, test_right) -> None:
+    while variables[top_var] == test_right:
+        initial = variables[top_var]
+
         for children in body['children']:
-            visit_element(children, pattern, tainted, vars)
-        if inicial == vars[topVar]:
+            visit_element(children, pattern, tainted, variables)
+
+        if initial == variables[top_var]:
             break
 
 
-def visit_offsetlookup(argument: dict, pattern: Pattern, tainted: list) -> None:
+def visit_offsetlookup(argument: dict, pattern: Pattern) -> None:
     if 'what' in argument:
         what = argument['what']
+
         for entry in pattern.entries:
             if what['name'] == entry.strip('$'):
                 alert(pattern)
@@ -156,20 +167,25 @@ def visit_offsetlookup(argument: dict, pattern: Pattern, tainted: list) -> None:
 def visit_assign_offsetlookup(element: dict, pattern: Pattern,
                               tainted: list) -> Union[dict, None]:
     right = element['right']
+
     if 'what' in right:
         what = right['what']
+
         if what['kind'] == 'variable':
             for entry in pattern.entries:
                 if what['name'] == entry.strip('$'):
                     taint = element['left']['name']
+
                     if taint != '' and not taint in tainted:
                         tainted.append(taint)
+
                     return what['name']
 
 
 def visit_assign_call(element: dict, pattern: Pattern, tainted: list,
-                      vars: dict) -> str:
+                      variables: dict) -> str:
     right = element['right']
+
     if 'what' in right:
         what = right['what']
         if what['kind'] == 'identifier':
@@ -187,9 +203,9 @@ def visit_assign_call(element: dict, pattern: Pattern, tainted: list,
 
             if what['name'] == 'substr':
                 if element['left']['kind'] == 'variable':
-                    leftVar = element['left']['name']
-                    if leftVar in vars:
-                        vars[leftVar] = vars[leftVar][1:]
+                    left_var = element['left']['name']
+                    if left_var in variables:
+                        variables[left_var] = variables[left_var][1:]
 
     return ''
 
@@ -205,71 +221,75 @@ def visit_call(element: dict, pattern: Pattern, tainted: list) -> None:
                             alert(pattern)
 
 
-def alert(pattern):
-    print('Possible vulnerability detected: {type}'.format(type=pattern.type))
-    print('Please consider sanitizing tainted code with one of the following:\n'
-          + '- ', end='')
-    print('\n- '.join([s for s in pattern.sanitizers]))
-    sys.exit(1)
-
-
-def visit_encapsed(element: dict, tainted: list, vars: dict) -> str:
+def visit_encapsed(element: dict, tainted: list, variables: dict) -> str:
     right = element['right']
-    varValue = ''
+    val = ''
+
     if 'value' in right:
         for value in right['value']:
             if 'name' in value:
                 if value['name'] in tainted:
                     if not element['left']['name'] in tainted:
                         tainted.append(element['left']['name'])
-                if value['name'] in vars:
-                    varValue += vars[value['name']]
+                if value['name'] in variables:
+                    val += variables[value['name']]
             elif value['kind'] == 'string':
-                varValue += value['value']
-    return varValue
+                val += value['value']
+
+    return val
 
 
-def visit_bin(element: dict, tainted: list, vars: dict) -> Union[str, None]:
-    varValue = ''
+def visit_bin(element: dict, tainted: list,
+              variables: dict) -> Union[str, None]:
+    val = ''
+    top_var = None
+
     if 'kind' in element['left']:
         if element['left']['kind'] == 'variable':
             top_var = element['left']['name']
     else:
         return
+
     right = element['right']
     if right['kind'] == 'variable':
         if right['name'] in tainted:
-            if top_var != '' and not top_var in tainted:
+            if top_var is not None and top_var not in tainted:
                 tainted.append(top_var)
-        if right['name'] in vars:
-            varValue += vars[right['name']]
+        if right['name'] in variables:
+            val += variables[right['name']]
     elif right['kind'] == 'string':
-        varValue += right['value']
+        val += right['value']
+
     if 'left' in right:
-        varValue += visit_bin_rec(right, tainted, top_var, vars)
-    return varValue
+        val += visit_bin_rec(right, tainted, top_var, variables)
+
+    return val
 
 
 def visit_bin_rec(element: dict, tainted: list, top_var: dict,
-                  vars: dict) -> str:
-    varValue = ''
+                  variables: dict) -> str:
+    val = ''
+
     if element['kind'] == 'variable':
         if element['name'] in tainted:
-            if top_var != '' and not top_var in tainted:
+            if top_var is not None and top_var not in tainted:
                 tainted.append(top_var)
-        if element['name'] in vars:
-            varValue += vars[element['name']]
+
+        if element['name'] in variables:
+            val += variables[element['name']]
+
     elif element['kind'] == 'string':
-        varValue += element['value']
+        val += element['value']
 
     if 'left' in element:
         left = element['left']
-        varValue += visit_bin_rec(left, tainted, top_var, vars)
+        val += visit_bin_rec(left, tainted, top_var, variables)
 
     if 'right' in element:
         right = element['right']
-        varValue += visit_bin_rec(right, tainted, top_var, vars)
-    return varValue
+        val += visit_bin_rec(right, tainted, top_var, variables)
+
+    return val
 
 
 def get_patterns(file_name: str) -> List[Pattern]:
@@ -287,6 +307,14 @@ def get_patterns(file_name: str) -> List[Pattern]:
                 ))
 
     return patterns
+
+
+def alert(pattern):
+    print('Possible vulnerability detected: {type}'.format(type=pattern.type))
+    print('Please consider sanitizing tainted code with one of the following:\n'
+          + '- ', end='')
+    print('\n- '.join([s for s in pattern.sanitizers]))
+    sys.exit(1)
 
 
 if __name__ == '__main__':
