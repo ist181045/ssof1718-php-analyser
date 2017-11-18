@@ -4,9 +4,10 @@ import json
 import sys
 
 from pattern import Pattern
+from typing import List, Union
 
 
-def analysis(file):
+def analysis(file: str) -> None:
     patterns = get_patterns("patterns")
     ast = None
 
@@ -32,7 +33,7 @@ def analysis(file):
                     if right['kind'] == 'bin':
                         visit_bin(element, tainted)
 
-                if element['kind'] in pattern.sensitiveSinks:
+                if element['kind'] in pattern.sinks:
                     arguments = element['arguments']
                     for argument in arguments:
                         if argument['kind'] == 'offsetlookup':
@@ -46,7 +47,7 @@ def analysis(file):
                     #    visitWhile(element, pattern, tainted)
 
 
-def visit_offsetlookup(argument, pattern, tainted):
+def visit_offsetlookup(argument: dict, pattern: Pattern, tainted: list) -> None:
     if 'what' in argument:
         what = argument['what']
         for entry in pattern.entries:
@@ -54,7 +55,8 @@ def visit_offsetlookup(argument, pattern, tainted):
                 print('slice is vulnerable')
 
 
-def visit_assign_offsetlookup(element, pattern, tainted):
+def visit_assign_offsetlookup(element: dict, pattern: Pattern,
+                              tainted: list) -> None:
     right = element['right']
     if 'what' in right:
         what = right['what']
@@ -66,7 +68,8 @@ def visit_assign_offsetlookup(element, pattern, tainted):
                         tainted.append(taint)
 
 
-def visit_assign_call(element, pattern, tainted):
+def visit_assign_call(element: dict, pattern: Pattern, tainted: list) \
+        -> Union[str, None]:
     right = element['right']
     if 'what' in right:
         what = right['what']
@@ -84,7 +87,7 @@ def visit_assign_call(element, pattern, tainted):
     return ""
 
 
-def visit_call(element, pattern, tainted):
+def visit_call(element: dict, pattern: Pattern, tainted: list) -> None:
     if 'what' in element:
         what = element['what']
         for sink in pattern.sinks:
@@ -95,7 +98,7 @@ def visit_call(element, pattern, tainted):
                             print('slice is vulnerable')
 
 
-def visit_encapsed(element, tainted):
+def visit_encapsed(element: dict, tainted: list) -> None:
     right = element['right']
     if 'value' in right:
         for value in right['value']:
@@ -105,7 +108,7 @@ def visit_encapsed(element, tainted):
                         tainted.append(element['left']['name'])
 
 
-def visit_bin(element, tainted):
+def visit_bin(element: dict, tainted: list) -> None:
     if 'kind' in element['left']:
         if element['left']['kind'] == 'variable':
             top_var = element['left']['name']
@@ -120,7 +123,7 @@ def visit_bin(element, tainted):
         visit_bin_rec(right, tainted, top_var)
 
 
-def visit_bin_rec(element, tainted, top_var):
+def visit_bin_rec(element: dict, tainted: list, top_var: dict) -> None:
     if element['kind'] == 'variable':
         if element['name'] in tainted:
             if top_var != "" and not top_var in tainted:
@@ -135,7 +138,7 @@ def visit_bin_rec(element, tainted, top_var):
         visit_bin_rec(right, tainted, top_var)
 
 
-def get_patterns(file_name):
+def get_patterns(file_name: str) -> List[Pattern]:
     patterns = []
     with open(file_name, 'r') as file:
         for line in file:
