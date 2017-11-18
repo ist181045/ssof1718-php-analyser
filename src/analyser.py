@@ -2,9 +2,9 @@
 
 import json
 import sys
+from typing import List, Union
 
 from pattern import Pattern
-from typing import List, Union
 
 
 def analysis(file: str) -> None:
@@ -22,12 +22,14 @@ def analysis(file: str) -> None:
                 visit_element(element, pattern, tainted, vars)
 
 
-def visit_element(element: dict, pattern: Pattern, tainted: list, vars: dict) -> None:
+def visit_element(element: dict, pattern: Pattern, tainted: list,
+                  vars: dict) -> None:
     if element['kind'] == 'assign':
         left = element['left']
         right = element['right']
         if right['kind'] == 'offsetlookup':
-            vars[left['name']] = visit_assign_offsetlookup(element, pattern, tainted)
+            vars[left['name']] = visit_assign_offsetlookup(element, pattern,
+                                                           tainted)
 
         if right['kind'] == 'call':
             visit_assign_call(element, pattern, tainted)
@@ -46,8 +48,6 @@ def visit_element(element: dict, pattern: Pattern, tainted: list, vars: dict) ->
                 if right['name'] in vars:
                     vars[left['name']] = vars[right['name']]
 
-
-
     if element['kind'] in pattern.sinks:
         arguments = element['arguments']
         for argument in arguments:
@@ -57,11 +57,29 @@ def visit_element(element: dict, pattern: Pattern, tainted: list, vars: dict) ->
     if element['kind'] == 'call':
         visit_call(element, pattern, tainted)
 
+    if element['kind'] == 'if':
+        visit_if(element, pattern, tainted)
+
     if element['kind'] == 'while':
         visit_while(element, pattern, tainted, vars)
 
 
-def visit_while(element: dict, pattern: Pattern, tainted: list, vars: dict) -> None:
+def visit_if(element: dict, pattern: Pattern, tainted: list) -> None:
+    body = element['body']
+    for child in body['children']:
+        visit_element(child, pattern, tainted)
+
+    alternate = element['alternate']
+    if alternate is not None:
+        if alternate['kind'] == 'if':
+            visit_if(element, pattern, tainted)
+        else:
+            for child in alternate['children']:
+                visit_element(child, pattern, tainted)
+
+
+def visit_while(element: dict, pattern: Pattern, tainted: list,
+                vars: dict) -> None:
     test = element['test']
     topVar = ''
     if test['kind'] == 'bin':
@@ -77,6 +95,7 @@ def visit_while(element: dict, pattern: Pattern, tainted: list, vars: dict) -> N
         if topChange == True:
             visit_element(children, pattern, tainted, vars)
 
+
 def visit_offsetlookup(argument: dict, pattern: Pattern, tainted: list) -> None:
     if 'what' in argument:
         what = argument['what']
@@ -86,7 +105,7 @@ def visit_offsetlookup(argument: dict, pattern: Pattern, tainted: list) -> None:
 
 
 def visit_assign_offsetlookup(element: dict, pattern: Pattern,
-                              tainted: list) -> None:
+                              tainted: list) -> Union[dict, None]:
     right = element['right']
     if 'what' in right:
         what = right['what']
@@ -99,8 +118,7 @@ def visit_assign_offsetlookup(element: dict, pattern: Pattern,
                     return what['name']
 
 
-def visit_assign_call(element: dict, pattern: Pattern,
-                      tainted: list) -> Union[str, None]:
+def visit_assign_call(element: dict, pattern: Pattern, tainted: list) -> str:
     right = element['right']
     if 'what' in right:
         what = right['what']
@@ -145,8 +163,7 @@ def visit_encapsed(element: dict, tainted: list, vars: dict) -> str:
     return varValue
 
 
-
-def visit_bin(element: dict, tainted: list, vars: dict) -> str:
+def visit_bin(element: dict, tainted: list, vars: dict) -> Union[str, None]:
     varValue = ''
     if 'kind' in element['left']:
         if element['left']['kind'] == 'variable':
@@ -167,7 +184,8 @@ def visit_bin(element: dict, tainted: list, vars: dict) -> str:
     return varValue
 
 
-def visit_bin_rec(element: dict, tainted: list, top_var: dict, vars :dict) -> str:
+def visit_bin_rec(element: dict, tainted: list, top_var: dict,
+                  vars: dict) -> str:
     varValue = ''
     if element['kind'] == 'variable':
         if element['name'] in tainted:
