@@ -1,10 +1,10 @@
 \subsubsection*{Patterns}
-\label{sec:expr.comps.patterns}
+\label{sec:experimental.components.patterns}
 
 The \verb|patterns| file contains a set of vulnerable patterns with the
 following format:
 
-\begin{lstlisting}[label={lst:pat.tmpl},
+\begin{lstlisting}[label={lst:pattern.template},
         caption={Vulnerable pattern template}]
     Vulnerability
     Entry|\tsub{1}|,Entry|\tsub{2}|,...,Entry|\tsub{i}|
@@ -16,7 +16,7 @@ where \verb|Vulnerability| is the name of the vulnerability, \verb|Entry| is an
 entry point, \verb|Sanitizer| is a sanitization/validation function, and
 \verb|Sink| a sensitive sink. Example:
 
-\begin{lstlisting}[label={lst:pat.ex},
+\begin{lstlisting}[label={lst:pattern.example},
         caption={SQL Injection pattern, specific to PostgreSQL}]
     SQL injection (PostgreSQL)
     $_GET,$_POST,$_COOKIE,$_REQUEST

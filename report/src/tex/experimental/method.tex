@@ -1,0 +1,27 @@
+\subsection*{Method}
+\label{sec:experimental.method}
+
+We approached the problem in a somewhat simplistic and restrictive way, meaning,
+unfortunately, that achieving modifiability is hard, yet not impossible, due to
+the limited subset of language elements considered and the rudimentary way the
+tool was designed.
+
+To start off, the patterns are fetched from the \verb|patterns| file and parsed,
+generating a list of \verb|Pattern| objects.
+
+Then, the JSON formatted slice is loaded and the AST is converted into a Python
+dictionary, which is used throughout the analysis. Adopting a visitor-like
+model, the tool's able to analyse the nodes separately, which seemingly contrary
+to what was previously stated, does enable change, in the sense that for another
+construct to be introduced, one or two function need(s) to be added to analyse
+the corresponding node.
+
+During the traversal, a list of tainted symbols (variables) is carried along, as
+well as a dictionary of variables and their respective values. This allows us to
+perform, as we go, some basic taint analysis as we can detect when a tainted
+object is used in a sensitive sink.
+
+Once such a case is detected, the program reports the vulnerability, suggests
+a set of possible sanitizations that can be used and, for simplicity's sake,
+exits, since we assumed not more than one vulnerability was present in the given
+slices of code.
