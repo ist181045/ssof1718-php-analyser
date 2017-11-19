@@ -1,7 +1,7 @@
 \section{The Tool}
 \label{sec:tool}
 
-The tool was conseived using the \verb|Python| programming language, version
+The tool was conceived using the \verb|Python| programming language, version
 \verb|3.6.3|. It consists of a main component, the analyser
 (\verb|analyser.py|), and a pattern module (\verb|pattern.py|) that houses the
 \verb|Pattern| class, used to instantiate objects that represent vulnerable
@@ -22,12 +22,12 @@ where \verb|Vulnerability| is the name of the vulnerability, \verb|Entry| is an
 entry point, \verb|Sanitizer| is a sanitization/validation function, and
 \verb|Sink| a sensitive sink. Example:
 
-\begin{verbatim}
-    SQL Injection (MySQL)
-    $_GET,$_POST,$_COOKIE,$_REQUEST,...
-    mysql_escape_string,mysql_real_escape_string
-    mysql_query,mysql_unbuffered_query,mysql_db_query
-\end{verbatim}
+\begin{lstlisting}
+    SQL injection (PostgreSQL)
+    $_GET,$_POST,$_COOKIE,$_REQUEST
+    pg_escape_string,pg_escape_bytea
+    pg_query,pg_send_query
+\end{lstlisting}
 
 The main component is run by invoking it and passing it a PHP program slice in
 JSON format as a command line argument.
