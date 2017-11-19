@@ -71,20 +71,132 @@ def visit_element(element: dict, pattern: Pattern, tainted: list,
         visit_while(element, pattern, tainted, variables)
 
 
-def visit_if(element: dict, pattern: Pattern, tainted: list,
-             variables: dict) -> None:
-    body = element['body']
-    for child in body['children']:
-        visit_element(child, pattern, tainted, variables)
+def visit_left_test(left: dict) -> dict:
+    test_left = {}
+    if left['kind'] == 'variable':
+        test_left['variable'] = left['name']
+    elif left['kind'] == 'string':
+        test_left['string'] = left['value']
+    return test_left
 
-    alternate = element['alternate']
+def visit_right_test(right: dict) -> dict:
+    test_right = {}
+    if right['kind'] == 'variable':
+        test_right['variable'] = right['name']
+    elif right['kind'] == 'string':
+        test_right['string'] = right['value']
+    return test_right
+
+
+def visit_if(element: dict, pattern: Pattern, tainted: list, vars: dict) -> None:
+    test = element['test']
+
+    if test['type'] == '==':
+
+        test_left = visit_left_test(test['left'])
+
+        test_right = visit_right_test(test['right'])
+
+        if 'variable' in test_left and 'string' in test_right:
+            if test_left['variable'] not in vars:
+                visit_main_if_block(element['body'], pattern, tainted, vars)
+                visit_alternate(element['alternate'], pattern, tainted, vars)
+
+            elif vars[test_left['variable']] == test_right:
+                visit_main_if_block(element['body'], pattern, tainted, vars)
+
+            else:
+                visit_alternate(element['alternate'], pattern, tainted, vars)
+
+        elif 'string' in test_left and 'variable' in test_right:
+            if test_right['variable'] not in vars:
+                visit_main_if_block(element['body'], pattern, tainted, vars)
+                visit_alternate(element['alternate'], pattern, tainted, vars)
+
+            elif test_left == vars[test_right['variable']]:
+                visit_main_if_block(element['body'], pattern, tainted, vars)
+
+            else:
+                visit_alternate(element['alternate'], pattern, tainted, vars)
+
+        elif 'variable' in test_left and 'variable' in test_right:
+            if test_left['variable'] not in vars or test_right['variable'] not in vars:
+                visit_main_if_block(element['body'], pattern, tainted, vars)
+                visit_alternate(element['alternate'], pattern, tainted, vars)
+
+            elif vars[test_left['variable']] == vars[test_right['variable']]:
+                visit_main_if_block(element['body'], pattern, tainted, vars)
+
+            else:
+                visit_alternate(element['alternate'], pattern, tainted, vars)
+
+        elif 'string' in test_left and 'string' in test_right:
+            if test_left == test_right:
+                visit_main_if_block(element['body'], pattern, tainted, vars)
+
+            else:
+                visit_alternate(element['alternate'], pattern, tainted, vars)
+
+
+    elif test['type'] == '!=':
+        test_left = visit_left_test(test['left'])
+
+        test_right = visit_right_test(test['right'])
+
+        if 'variable' in test_left and 'string' in test_right:
+            if test_left['variable'] not in vars:
+                visit_main_if_block(element['body'], pattern, tainted, vars)
+                visit_alternate(element['alternate'], pattern, tainted, vars)
+
+            elif vars[test_left['variable']] != test_right:
+                visit_main_if_block(element['body'], pattern, tainted, vars)
+
+            else:
+                visit_alternate(element['alternate'], pattern, tainted, vars)
+
+        elif 'string' in test_left and 'variable' in test_right:
+            if test_right['variable'] not in vars:
+                visit_main_if_block(element['body'], pattern, tainted, vars)
+                visit_alternate(element['alternate'], pattern, tainted, vars)
+
+            elif test_left == vars[test_right['variable']]:
+                visit_main_if_block(element['body'], pattern, tainted, vars)
+
+            else:
+                visit_alternate(element['alternate'], pattern, tainted, vars)
+
+        elif 'variable' in test_left and 'variable' in test_right:
+            if test_left['variable'] not in vars or test_right['variable'] not in vars:
+                visit_main_if_block(element['body'], pattern, tainted, vars)
+                visit_alternate(element['alternate'], pattern, tainted, vars)
+
+            elif vars[test_left['variable']] != vars[test_right['variable']]:
+                visit_main_if_block(element['body'], pattern, tainted, vars)
+
+            else:
+                visit_alternate(element['alternate'], pattern, tainted, vars)
+
+        elif 'string' in test_left and 'string' in test_right:
+            if test_left != test_right:
+                visit_main_if_block(element['body'], pattern, tainted, vars)
+
+            else:
+                visit_alternate(element['alternate'], pattern, tainted, vars)
+
+
+def visit_main_if_block(body: dict, pattern: Pattern, tainted: list,
+                vars: dict) -> None:
+    for child in body['children']:
+        visit_element(child, pattern, tainted, vars)
+
+def visit_alternate(alternate: dict, pattern: Pattern, tainted: list,
+                vars: dict) -> None:
     if alternate is not None:
         if alternate['kind'] == 'if':
-            visit_if(alternate, pattern, tainted, variables)
+            visit_if(alternate, pattern, tainted, vars)
         else:
             for child in alternate['children']:
-                visit_element(child, pattern, tainted, variables)
-
+                visit_element(child, pattern, tainted, vars)
 
 def visit_while(element: dict, pattern: Pattern, tainted: list,
                 variables: dict) -> None:
