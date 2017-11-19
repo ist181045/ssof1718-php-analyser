@@ -17,43 +17,43 @@ def analysis(file: str) -> None:
 
     for pattern in patterns:
         tainted = []
-        variables = {}
+        vars = {}
 
         if ast['kind'] == 'program':
             for element in ast['children']:
-                visit_element(element, pattern, tainted, variables)
+                visit_element(element, pattern, tainted, vars)
 
 
 def visit_element(element: dict, pattern: Pattern, tainted: list,
-                  variables: dict) -> None:
+                  vars: dict) -> None:
     if element['kind'] == 'assign':
         left = element['left']
         right = element['right']
 
         if right['kind'] == 'offsetlookup':
-            variables[left['name']] = \
+            vars[left['name']] = \
                 visit_assign_offsetlookup(element, pattern, tainted)
 
         if right['kind'] == 'call':
-            visit_assign_call(element, pattern, tainted, variables)
+            visit_assign_call(element, pattern, tainted, vars)
 
         if right['kind'] == 'encapsed':
-            variables[left['name']] = visit_encapsed(element, tainted,
-                                                     variables)
+            vars[left['name']] = visit_encapsed(element, tainted,
+                                                vars)
 
         if right['kind'] == 'bin':
-            variables[left['name']] = visit_bin(element, tainted, variables)
+            vars[left['name']] = visit_bin(element, tainted, vars)
 
         if left['kind'] == 'variable':
             if right['kind'] == 'variable':
                 if right['name'] in tainted:
                     if left['name'] not in tainted:
                         tainted.append(left['name'])
-                if right['name'] in variables:
-                    variables[left['name']] = variables[right['name']]
+                if right['name'] in vars:
+                    vars[left['name']] = vars[right['name']]
 
             if right['kind'] == 'string':
-                variables[left['name']] = right['value']
+                vars[left['name']] = right['value']
 
     if element['kind'] in pattern.sinks:
         arguments = element['arguments']
@@ -65,10 +65,10 @@ def visit_element(element: dict, pattern: Pattern, tainted: list,
         visit_call(element, pattern, tainted)
 
     if element['kind'] == 'if':
-        visit_if(element, pattern, tainted, variables)
+        visit_if(element, pattern, tainted, vars)
 
     if element['kind'] == 'while':
-        visit_while(element, pattern, tainted, variables)
+        visit_while(element, pattern, tainted, vars)
 
 
 def visit_left_test(left: dict) -> dict:
