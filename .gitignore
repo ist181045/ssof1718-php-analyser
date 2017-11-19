@@ -74,6 +74,8 @@ venv.bak/
 ## File-based project format:
 *.iws
 
+# vscode
+.vscode/
 
 # macOS garbage
 .DS_Store
