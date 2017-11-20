@@ -1,0 +1,22 @@
+\subsection*{Tool Configurability and Range}
+\label{sec:discussion.config}
+
+Despite being able to analyse the slices given to us as an example to base the
+tool around, it doesn't go far beyond it. The amount of language elements and
+scenarios considered is pretty confined to the ones present in the example
+slices.
+
+In spite of these restrictions, adding language elements isn't as difficult as
+it seems, though, likewise, not as easy as it could have been made to be. Since
+the analysis is broken down into various functions, each attributed to a
+language element (i.e. a node in the AST), meaning, if a language element is to
+be added, implementing the functions for the nodes being introduced should be
+sufficient. With it, taint analysis is also a requirement, meaning the tracking
+of tainted objects/symbols must be implemented along with the basic visiting
+model.
+
+On the up side, the addition of patterns, if need be, is imensely easy, since
+all that is needed to do is add it to the \verb|patterns| file in the format 
+seen in Listing~\ref{lst:pattern.template} and the analyser will also consider
+it accordingly. The current set of patterns was in part retrieved from
+\cite{wap-manual:2017}.

@@ -1,0 +1,36 @@
+\subsection*{Imprecisions and Assumptions}
+\label{sec:discussion.imprecisions}
+
+We attempted to implement a very simple taint analysis mechanism loosely based
+on~\cite{Medeiros:2014:ADC:2566486.2568024}, with an equally simplistic data
+mining model, which consists in collecting data on the symbols (variables) that
+were visited. Code correction was skipped altogether, finally only providing
+some feedback to the programmer, albeit not too specific.
+
+Our taint analysis doesn't build any more trees, only working with the existing
+one and some utilitary structures that serve as records or state
+keepers/trackers, like the list of tainted symbols and their data.
+
+As such, it is very likely that our tool is imprecise and `vulnerable' to false
+positives, such as, e.g., tainting a symbol, passing it through a function that
+manipulates it and outputting it. The following example is a false positive our
+tool detects:
+
+\begin{lstlisting}[label={lst:php.example.xss.false},
+        caption={Example of custom sanitization that triggers XSS false
+        positive}]
+    $nis=$_POST['user']
+    $out=str_replace('<script','',$nis);
+    echo $out;
+\end{lstlisting}
+
+Our tool assumes \verb|$nis| is tainted, since \verb|$_POST| is an entry point.
+Consequently, \verb|$out| gets tainted because a transformation of \verb|$nis|
+is assigned to \verb|$out|. However, part of the \verb|script| tags that might
+have been present have been removed, ``sanitizing'' the output.
+
+This idea, of ``custom sanitization'', is exposed in~\cite{Balzarotti:2008},
+detailing programmer can write ``custom'' code in order to sanitize code. It is
+still said that there is no guarantee that, through this mean, the output is
+safe for usage in a sensitive sink, but assuming that all other custom
+sanitization operations are doomed from the start isn't absolutely true.
