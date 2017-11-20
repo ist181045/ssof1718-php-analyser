@@ -12,9 +12,9 @@ introduced, one or two function need(s) to be added to analyse the corresponding
 node.
 
 During the traversal, a list of tainted symbols (variables) is carried along, as
-well as a dictionary of defined variables and their respective values (even if
-previously undefined). This allows us to perform, as we go, some basic taint
-analysis as we can detect when a tainted object is used in a sensitive sink.
+well as a dictionary of defined variables and their respective values. This
+allows us to perform, as we go, some basic taint analysis as we can detect when
+a tainted object is used in a sensitive sink.
 
 Once such a case is detected, the program reports the vulnerability, suggests
 a set of possible sanitizations that can be used and, for simplicity's sake,
