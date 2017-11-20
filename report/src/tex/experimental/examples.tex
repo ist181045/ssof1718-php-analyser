@@ -3,39 +3,7 @@
 
 \lstset{basicstyle=\fontsize{9}{11}\ttfamily}
 
-\subsubsection*{Slice 6}
-\label{sec:experimental.example.slice06}
-
-\begin{lstlisting}[label={php.slice06},
-        title={slice6.php}]
-    echo $_POST['username'];
-\end{lstlisting}
-
-\begin{lstlisting}[label={out.example.slice06},
-        caption={Shortened example XSS vulnerable slice analysis output}]
-    $ ./analyzer.py /path/to/slice6.json
-    Possible vulnerability detected: XSS
-    Please consider sanitizing...with one of the following:
-    - htmlentities
-    ...
-\end{lstlisting}
-
-\subsubsection*{Slice 8}
-\label{sec:experimental.example.slice08}
-
-\begin{lstlisting}[label={php.slice08},
-        title={slice8.php}]
-    $nis=$_POST['nis'];
-    if($indarg=="") {$query="SELECT * FROM siswa WHERE nis='$nis'";}
-    else {$query="SELECT * FROM siswa WHERE nis='$indarg'";}
-    $q=mysql_query($query,$koneksi);
-\end{lstlisting}
-
-\begin{lstlisting}[label={out.example.slice08},
-        caption={Shortened example SQLI vulnerable slice analysis output}]
-    $ ./analyzer.py /path/to/slice8.json
-    Possible vulnerability detected: SQL injection...
-    Please consider sanitizing...
-\end{lstlisting}
+\subimport*{examples/}{slice06}
+\subimport*{examples/}{slice08}
 
 \lstset{basicstyle=\small\ttfamily}
