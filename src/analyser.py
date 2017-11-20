@@ -249,6 +249,7 @@ def visit_while(element: dict, pattern: Pattern, tainted: list,
         elif test_type == '==':
             visit_while_equal_test(body, pattern, tainted, vars, top_var,
                                    test_right)
+        vars.pop(top_var)
 
 
 def visit_while_diff_test(body: dict, pattern: Pattern, tainted: list,
