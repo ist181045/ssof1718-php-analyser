@@ -21,7 +21,6 @@ def analysis(file: str) -> None:
 
         if ast['kind'] == 'program':
             for element in ast['children']:
-                print(str(tainted))
                 visit_element(element, pattern, tainted, vars)
 
 
