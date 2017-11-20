@@ -1,8 +1,7 @@
 \subsubsection*{Slice 6}
 \label{sec:experimental.examples.slice06}
 
-\begin{lstlisting}[label={php.slice06},
-        title={slice6.php}]
+\begin{lstlisting}[label={php.slice06}]
     echo $_POST['username'];
 \end{lstlisting}
 
@@ -10,7 +9,8 @@
         caption={Shortened example XSS vulnerable slice analysis output}]
     $ ./analyzer.py /path/to/slice6.json
     Possible vulnerability detected: XSS
-    Please consider sanitizing...with one of the following:
+    Please consider sanitizing tainted code with 1 of the following:
     - htmlentities
+    - htmlspecialchars
     ...
 \end{lstlisting}
