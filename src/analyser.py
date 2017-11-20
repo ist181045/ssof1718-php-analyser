@@ -21,6 +21,7 @@ def analysis(file: str) -> None:
 
         if ast['kind'] == 'program':
             for element in ast['children']:
+                print(str(tainted))
                 visit_element(element, pattern, tainted, vars)
 
 
@@ -60,6 +61,9 @@ def visit_element(element: dict, pattern: Pattern, tainted: list,
         for argument in arguments:
             if argument['kind'] == 'offsetlookup':
                 visit_offsetlookup(argument, pattern)
+            if 'name' in argument:
+                if argument['name'] in tainted:
+                    alert(pattern)
 
     if element['kind'] == 'call':
         visit_call(element, pattern, tainted)
@@ -317,6 +321,15 @@ def visit_assign_call(element: dict, pattern: Pattern, tainted: list,
                     for argument in right['arguments']:
                         if argument['name'] in tainted:
                             tainted.remove(argument['name'])
+            
+            left = element['left']
+            if 'kind' in left:
+                if left['kind'] == 'variable':
+                    for argument in right['arguments']:
+                        if 'name' in argument:
+                            if argument['name'] in tainted \
+                                    and left['name'] not in tainted:
+                                tainted.append(left['name'])
 
             if what['name'] == 'substr':
                 if element['left']['kind'] == 'variable':
