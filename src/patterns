@@ -1,0 +1,49 @@
+SQL injection (MySQL)
+$_GET,$_POST,$_COOKIE,$_REQUEST,$HTTP_GET_VARS,$HTTP_POST_VARS,$HTTP_COOKIE_VARS,$HTTP_REQUEST_VARS
+mysql_escape_string,mysql_real_escape_string
+mysql_query,mysql_unbuffered_query,mysql_db_query
+
+SQL injection (MySQL)
+$_GET,$_POST,$_COOKIE,$_REQUEST,$HTTP_GET_VARS,$HTTP_POST_VARS,$HTTP_COOKIE_VARS,$HTTP_REQUEST_VARS
+mysqli_escape_string,mysqli_real_escape_string
+mysqli_query,mysqli_real_query,mysqli_master_query,mysqli_multi_query
+
+SQL injection (MySQL)
+$_GET,$_POST,$_COOKIE,$_REQUEST,$HTTP_GET_VARS,$HTTP_POST_VARS,$HTTP_COOKIE_VARS,$HTTP_REQUEST_VARS
+mysqli_stmt_bind_param
+mysqli_stmt_execute,mysqli_execute
+
+SQL injection (MySQL)
+$_GET,$_POST,$_COOKIE,$_REQUEST,$HTTP_GET_VARS,$HTTP_POST_VARS,$HTTP_COOKIE_VARS,$HTTP_REQUEST_VARS
+mysqli::escape_string,mysqli::real_escape_string
+mysqli::query,mysqli::multi_query,mysqli::real_query
+
+SQL injection (MySQL)
+$_GET,$_POST,$_COOKIE,$_REQUEST,$HTTP_GET_VARS,$HTTP_POST_VARS,$HTTP_COOKIE_VARS,$HTTP_REQUEST_VARS
+mysqli_stmt::bind_param
+mysqli_stmt::execute
+
+SQL injection (DB2)
+$_GET,$_POST,$_COOKIE,$_REQUEST,$HTTP_GET_VARS,$HTTP_POST_VARS,$HTTP_COOKIE_VARS,$HTTP_REQUEST_VARS
+db2_escape_string
+db2_exec
+
+SQL injection (PostgreSQL)
+$_GET,$_POST,$_COOKIE,$_REQUEST,$HTTP_GET_VARS,$HTTP_POST_VARS,$HTTP_COOKIE_VARS,$HTTP_REQUEST_VARS
+pg_escape_string,pg_escape_bytea
+pg_query,pg_send_query
+
+XSS
+$_GET,$_POST,$_COOKIE,$_REQUEST,$HTTP_GET_VARS,$HTTP_POST_VARS,$HTTP_COOKIE_VARS,$HTTP_REQUEST_VARS,$_FILES,$_SERVER
+htmlentities,htmlspecialchars,strip_tags,urlencode
+echo,print,printf,die,error,exit
+
+XSS
+$_GET,$_POST,$_COOKIE,$_REQUEST,$HTTP_GET_VARS,$HTTP_POST_VARS,$HTTP_COOKIE_VARS,$HTTP_REQUEST_VARS,$_FILES,$_SERVER
+htmlentities,htmlspecialchars,strip_tags,urlencode
+file_put_contents
+
+XSS
+$_GET,$_POST,$_COOKIE,$_REQUEST,$HTTP_GET_VARS,$HTTP_POST_VARS,$HTTP_COOKIE_VARS,$HTTP_REQUEST_VARS,$_FILE,$_SERVER
+htmlentities,htmlspecialchars,strip_tags,urlencode
+file_get_contents

@@ -1,0 +1,18 @@
+\subsubsection*{Slice 8}
+\label{sec:experimental.examples.slice08}
+
+\begin{lstlisting}[label={php.slice08}]
+    $nis=$_POST['nis'];
+    if($indarg=="") {$query="SELECT * FROM siswa WHERE nis='$nis'";}
+    else {$query="SELECT * FROM siswa WHERE nis='$indarg'";}
+    $q=mysql_query($query,$koneksi);
+\end{lstlisting}
+
+\begin{lstlisting}[label={out.example.slice08},
+        caption={Shortened example SQLI vulnerable slice analysis output}]
+    $ ./analyzer.py /path/to/slice8.json
+    Possible vulnerability detected: SQL injection...
+    Please consider sanitizing tainted code with 1 of the following:
+    - mysql_escape_string
+    - mysql_real_escape_string
+\end{lstlisting}

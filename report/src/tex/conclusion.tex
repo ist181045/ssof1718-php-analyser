@@ -1,0 +1,17 @@
+\section*{Conclusion}
+\label{sec:conclusion}
+
+Static code analysis is far from a perfect method of detecting vulnerabilities
+in non-trivial high-level programming languages due to a vast array of nuances
+and non-obvious yet sanitizing mechanisms implemented in a custom way by the
+programmers themselves. Yet, these mechanisms might not assure sanitization
+either since they might be able to be subverted, meaning the code was vulnerable
+in the end. Undeniably, howver, it has become more and more robust through the
+introduction of mechanisms such as taint analysis, data mining and code
+correction~\cite{Medeiros:2014:ADC:2566486.2568024}.
+
+As far as our tool goes, it is far from achieving the quality of state of the
+art tools such as WAP~\cite{Medeiros:2014:ADC:2566486.2568024,wap-manual:2017},
+being our tool limited to a very simple and very small subset of an immense
+programming language with so many subtleties such as the PHP programming
+language.

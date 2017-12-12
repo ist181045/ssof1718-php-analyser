@@ -1,0 +1,15 @@
+\subsubsection*{Analyser}
+\label{sec:experimental.components.analyser}
+
+The main analyser component is run by invoking it and passing it a PHP program
+slice in JSON object format as a command line argument.
+
+\begin{lstlisting}[label={lst:analyser.command},
+    caption={Command line to run analyser}]
+    $ analyser.py /path/to/slice.json
+\end{lstlisting}
+
+The slice being provided must already be in the form of an AST just like the
+ones produced by Glayzzle's PHP Parser \cite{glayzzle-php:2017}. Otherwise, the
+tool will not work as it's designed to only accept ASTs with that specific
+format.
